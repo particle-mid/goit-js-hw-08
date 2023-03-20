@@ -1,55 +1,43 @@
 import throttle from 'lodash.throttle';
 
+const form = document.querySelector('.feedback-form');
+const emailInput = form.querySelector('[name="email"]');
+const messageInput = form.querySelector('[name="message"]');
 const STORAGE_KEY = 'feedback-form-state';
-let formData = {};
 
-const refs = {
-  form: document.querySelector('.feedback-form'),
+
+form.addEventListener('input', throttle(onFormInput, 500));
+
+const savedFormState = localStorage.getItem(STORAGE_KEY);
+if (savedFormState) {
+const { email, message } = JSON.parse(savedFormState);
+emailInput.value = email;
+messageInput.value = message;
+}
+
+function onFormInput() {
+const formState = {
+email: emailInput.value,
+message: messageInput.value,
 };
-
-refs.form.addEventListener('submit', handleFormSubmit);
-refs.form.addEventListener('input', throttle(handleFormInput, 500));
-
-function handleFormSubmit(event) {
-  event.preventDefault();
-
-  const {
-    elements: { email, message },
-  } = event.target;
-
-  if (email.value === '' || message.value === '') {
-    return alert('Please complete all required fields');
-  }
-
-  const form = { email: email.value, message: message.value };
-
-  event.target.reset();
-
-  localStorage.removeItem(STORAGE_KEY);
-
-  console.log(form);
+localStorage.setItem(STORAGE_KEY, JSON.stringify(formState));
 }
 
-function handleFormInput(event) {
-  formData[event.target.name] = event.target.value;
+form.addEventListener('submit', onSubmit);
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+
+function onSubmit(e) {
+e.preventDefault();
+if (emailInput.value === '' || messageInput.value === '') {
+alert('Будь ласка, заповніть форму');
+return;
 }
-
-saveInputs();
-
-function saveInputs() {
-  const savedData = localStorage.getItem(STORAGE_KEY);
-
-  if (savedData) {
-    formData = JSON.parse(savedData);
-
-    const entries = Object.entries(formData);
-
-    entries.forEach(([key, value]) => {
-      refs.form.elements[key].value = value;
-    });
-
-    console.log(entries);
-  }
+const formState = {
+email: emailInput.value,
+message: messageInput.value,
+};
+localStorage.removeItem(STORAGE_KEY);
+emailInput.value = '';
+messageInput.value = '';
+console.log(formState);
 }
